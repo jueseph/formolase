@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 
 def get_uniprot_metadata(accessions, batch_size = 300):
 
