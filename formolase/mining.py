@@ -43,7 +43,8 @@ def clustered_link_color_func(linkmat=None, clus=None, default_color='#AAAAAA', 
         link_cols[i+1+len(linkmat)] = c1 if np.all(c1 == c2) else default_color
     return lambda x: link_cols[x]
 
-def clustergram(mat, linkmat1, clus=None, linkmat2=None, cm_heatmap=plt.cm.inferno_r, cm_dendrogram=plt.cm.prism,
+def clustergram(mat, linkmat1, clus=None, linkmat2=None, dendro_linewidth = None,
+                cm_heatmap=plt.cm.inferno_r, cm_dendrogram=plt.cm.prism,
                 randomize_dendro_colors = True,
                 figsize=(8,8), heatmap_xlabel='', heatmap_ylabel='', colorbar_label=''):
 
@@ -51,6 +52,9 @@ def clustergram(mat, linkmat1, clus=None, linkmat2=None, cm_heatmap=plt.cm.infer
     import pandas as pd
     import matplotlib.pyplot as plt
     from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
+    
+    if dendro_linewidth is None:
+        dendro_linewidth = plt.rcParamsDefault['lines.linewidth']
 
     if linkmat2 is None:
         fig, axs = plt.subplots(nrows=3,ncols=4,figsize=figsize, 
@@ -73,28 +77,31 @@ def clustergram(mat, linkmat1, clus=None, linkmat2=None, cm_heatmap=plt.cm.infer
     lcf = (clustered_link_color_func(linkmat1, clus, default_color='#808080', cmap=cm_dendrogram, 
                                      randomize_colors = randomize_dendro_colors)
            if clus is not None else lambda x: '#808080')
-    dgram1 = dendrogram(linkmat1,
-                     orientation="left",
-                     get_leaves=True,
-                     no_labels=True,
-                     #labels=ids,
-                     distance_sort="ascending",
-                     ax=ax_left_dgram,
-                     link_color_func = lcf
-                    )
-    idx1 = [int(x) for x in dgram1['ivl']]
-    tmp = mat[idx1,:]
-
-    if linkmat2 is not None:
-        dgram2 = dendrogram(linkmat2,
-                         orientation="top",
+           
+    with plt.rc_context({'lines.linewidth': dendro_linewidth}):
+        dgram1 = dendrogram(linkmat1,
+                         orientation="left",
                          get_leaves=True,
                          no_labels=True,
                          #labels=ids,
                          distance_sort="ascending",
-                         ax=ax_top_dgram,
-                         link_color_func = lambda x: '#808080'
+                         ax=ax_left_dgram,
+                         link_color_func = lcf,
                         )
+    idx1 = [int(x) for x in dgram1['ivl']]
+    tmp = mat[idx1,:]
+
+    if linkmat2 is not None:
+        with plt.rc_context({'lines.linewidth': dendro_linewidth}):
+            dgram2 = dendrogram(linkmat2,
+                             orientation="top",
+                             get_leaves=True,
+                             no_labels=True,
+                             #labels=ids,
+                             distance_sort="ascending",
+                             ax=ax_top_dgram,
+                             link_color_func = lambda x: '#808080',
+                            )
         idx2 = [int(x) for x in dgram2['ivl']]
         tmp = tmp[:,idx2]
         ax_top_dgram.set_xlabel(heatmap_xlabel);
@@ -124,8 +131,8 @@ def clustergram(mat, linkmat1, clus=None, linkmat2=None, cm_heatmap=plt.cm.infer
     return fig, axs, idx1, ax_annot
 
 def clustergram_sideticks(ax, idx, idxvals=None, colors = None,
-                          colormap=plt.cm.Dark2, labels=None):
-    from plotting import deduplicate_legend_labels
+                          colormap=plt.cm.Dark2, labels=None, linewidth = None):
+    from formolase.plotting import deduplicate_legend_labels
 
     if idxvals is None:
         idxvals = set(idx)-set([0])
@@ -142,7 +149,7 @@ def clustergram_sideticks(ax, idx, idxvals=None, colors = None,
             continue
         tmp = pos.reshape(len(pos),1)
         y = np.hstack((tmp,tmp))
-        ax.plot([0,1],y.T,'-',c=c, label = lbl);
+        ax.plot([0,1],y.T,'-',c=c, label = lbl, linewidth = linewidth);
 
     ax.set_ylim([-.5,len(idx)-.5]);
     ax.legend(*deduplicate_legend_labels(ax), loc='center left',bbox_to_anchor=(1.01,0.5))
@@ -254,7 +261,10 @@ def load_ebihmmer_df(full_length_fasta_file, json_file):
 
     return df
 
-def filter_ebihmmer_df(df, seq_field='protein-sequence', name_field='accession', desc_field='description'):
+def filter_ebihmmer_df(df, **kwargs):
+    filter_seq_df(df, **kwargs)
+
+def filter_seq_df(df, seq_field='protein-sequence', name_field='accession', desc_field='description'):
     """Filters out sequences typically considered bad or useless from a table of sequences.
     Assumes that sequences are formatted as if they were loaded by `load_ebihmmer_df`."""
     

@@ -16,10 +16,11 @@ def flatten_96w_plate(df, value_name, well_order='row major'):
         wells = [(a,b) for a in df.index for b in df.columns]
     elif well_order == 'column major':
         wells = [(a,b) for b in df.columns for a in df.index]
-    return pd.DataFrame.from_items([
+    from collections import OrderedDict
+    return pd.DataFrame.from_dict(OrderedDict([
         ('well',['%s%02d' % (a,int(b)) for (a,b) in wells]),
         (value_name,[df.loc[a,b] for (a,b) in wells])
-    ])
+    ]))
 
 def load_96w_metadata(filename, well_order='row major'):
 
@@ -57,7 +58,7 @@ def load_spectramax_plate(filename, label=False):
 
 def load_spectramax_timecourse(filename, wells=None, metadatafile=None):
 
-    df = pd.read_table(filename,skiprows=3,skipfooter=1,header=None)
+    df = pd.read_table(filename,skiprows=3,skipfooter=1,header=None, engine='python')
 
     rowlist = []
 
@@ -89,14 +90,14 @@ def load_spectramax_timecourse(filename, wells=None, metadatafile=None):
     
     if metadatafile is not None:
         meta = load_96w_metadata(metadatafile)
-        meta = meta[meta['Enzyme']!='blank']
         meta = meta.T
         meta.columns = meta.loc['well']
         meta.columns.name = None
         meta = meta.drop('well')
         meta.insert(0,'Temperature',np.nan)
         meta.insert(0,'Seconds',np.nan)
-        df2 = meta.append(df2)
+        df2 = meta.append(df2, sort=False)
+        df2 = df2.loc[:,meta.iloc[0] != 'blank']
     
     return df2.T
 
