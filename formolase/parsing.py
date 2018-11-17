@@ -47,13 +47,19 @@ def load_96w_metadata(filename, well_order='row major'):
 
     return metadata
 
-def load_spectramax_plate(filename, label=False):
+def load_spectramax_plate(filename, label=False, metadatafile=None):
     dat = pd.read_table(filename,skiprows=3, header = None)
     dat = dat.iloc[:8,2:14]
     dat.columns = range(1,13)
     dat.index = list('ABCDEFGH')
     if label:
         dat = flatten_96w_plate(dat, label)
+    if metadatafile:
+        if not label:
+            label = 'Absorbance'
+            dat = flatten_96w_plate(dat,label)
+        meta = load_96w_metadata(metadatafile)
+        dat = meta.merge(dat, on='well')
     return dat
 
 def load_spectramax_timecourse(filename, wells=None, metadatafile=None):
@@ -80,7 +86,10 @@ def load_spectramax_timecourse(filename, wells=None, metadatafile=None):
             
     def convert_time_to_minutes(string):
         tokens = string.split(':')
-        return int(tokens[0])*60 + int(tokens[1])
+        if len(tokens)==2:
+            return int(tokens[0])*60 + int(tokens[1])
+        if len(tokens)==3:
+            return int(tokens[0])*60*60 + int(tokens[1])*60 + int(tokens[2])
     
     df2.insert(0,'Seconds',df2['Time'].apply(convert_time_to_minutes))
     df2 = df2.drop('Time',axis=1)
@@ -101,3 +110,12 @@ def load_spectramax_timecourse(filename, wells=None, metadatafile=None):
     
     return df2.T
 
+def df_to_mat_96w(df, column):
+    rowstr = 'ABCDEFGH'
+    mat = np.array([[np.nan]*12]*8)
+    for irow in range(8):
+        for icol in range(12):
+            tmp = df[df['well']==('%s%02d' % (rowstr[irow], icol+1))]
+            if tmp.shape[0]>0:
+                mat[irow,icol] = tmp[column].values[0]
+    return mat

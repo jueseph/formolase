@@ -45,3 +45,10 @@ def savefig(fig, filename, **kwargs):
            }
     args.update(kwargs)
     fig.savefig(filename, **args)
+
+def outside_legend(ax, deduplicate=True, **kwargs):
+    if deduplicate:
+        ax.legend(*deduplicate_legend_labels(ax),bbox_to_anchor=(1.01,0.5), loc='center left', **kwargs)
+    else:
+        ax.legend(bbox_to_anchor=(1.01,0.5), loc='center left', **kwargs)
+
