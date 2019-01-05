@@ -52,3 +52,8 @@ def outside_legend(ax, deduplicate=True, **kwargs):
     else:
         ax.legend(bbox_to_anchor=(1.01,0.5), loc='center left', **kwargs)
 
+def outside_axis_labels(ax, axs, xlabel='', ylabel=''):
+    if any(ax==axs[-1,:]):
+        ax.set_xlabel(xlabel)
+    if any(ax==axs[:,0]):
+        ax.set_ylabel(ylabel)
