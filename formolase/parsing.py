@@ -84,14 +84,14 @@ def load_spectramax_timecourse(filename, wells=None, metadatafile=None):
 
     df2 = pd.concat(rowlist).reset_index(drop=True)
             
-    def convert_time_to_minutes(string):
+    def convert_time_to_seconds(string):
         tokens = string.split(':')
         if len(tokens)==2:
             return int(tokens[0])*60 + int(tokens[1])
         if len(tokens)==3:
             return int(tokens[0])*60*60 + int(tokens[1])*60 + int(tokens[2])
     
-    df2.insert(0,'Seconds',df2['Time'].apply(convert_time_to_minutes))
+    df2.insert(0,'Seconds',df2['Time'].apply(convert_time_to_seconds))
     df2 = df2.drop('Time',axis=1)
     
     if wells is not None:
@@ -103,8 +103,8 @@ def load_spectramax_timecourse(filename, wells=None, metadatafile=None):
         meta.columns = meta.loc['well']
         meta.columns.name = None
         meta = meta.drop('well')
-        meta.insert(0,'Temperature',np.nan)
-        meta.insert(0,'Seconds',np.nan)
+        meta.insert(0,'Temperature',meta.loc[:,'A01'])
+        meta.insert(0,'Seconds',meta.loc[:,'A01'])
         df2 = meta.append(df2, sort=False)
         df2 = df2.loc[:,meta.iloc[0] != 'blank']
     
