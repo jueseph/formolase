@@ -103,8 +103,8 @@ def load_spectramax_timecourse(filename, wells=None, metadatafile=None):
         meta.columns = meta.loc['well']
         meta.columns.name = None
         meta = meta.drop('well')
-        meta.insert(0,'Temperature',meta.loc[:,'A01'])
-        meta.insert(0,'Seconds',meta.loc[:,'A01'])
+        meta.insert(0,'Temperature',np.nan)
+        meta.insert(0,'Seconds',np.nan)
         df2 = meta.append(df2, sort=False)
         df2 = df2.loc[:,meta.iloc[0] != 'blank']
     
