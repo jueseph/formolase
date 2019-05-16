@@ -162,6 +162,19 @@ def load_clustalo_dist_matrix(filename):
     dist.columns = dist.index
     return dist
 
+def get_subcluster(dist, nclus, iclus):
+    from scipy.cluster.hierarchy import linkage, fcluster
+    from scipy.spatial.distance import squareform
+
+    lm = linkage(squareform(dist.values), method='ward')
+    clus = fcluster(lm,nclus,criterion='maxclust')
+    if type(iclus) is list:
+        idx = np.any([clus==i for i in iclus],axis=0)
+    else:
+        idx = clus==iclus
+    dist = dist.loc[idx,idx]
+    return dist
+
 def diverse_subsample(distmat, n):
     import numpy as np
     from scipy.spatial.distance import squareform

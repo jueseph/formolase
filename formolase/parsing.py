@@ -119,3 +119,26 @@ def df_to_mat_96w(df, column):
             if tmp.shape[0]>0:
                 mat[irow,icol] = tmp[column].values[0]
     return mat
+
+def load_tecan_growth_curves(datafile, metafile):
+    from formolase.parsing import load_96w_metadata
+
+    df = pd.read_excel(datafile)
+
+    datastart = None
+    for irow,value in enumerate(df.iloc[:,0]):
+        if value=='Cycle Nr.':
+            datastart = irow
+
+    df = pd.read_excel(datafile,skiprows=datastart+1).dropna()
+    df.insert(0,'Hour',df['Time [s]']/3600)
+    df.columns = list(df.columns[0:4])+['%s%02d' % (row,col) for row in list('ABCDEFGH') for col in range(1,13)]
+    df = df.T
+
+    meta = load_96w_metadata(metafile)
+    meta.index = meta['well']
+    meta = meta.drop('well',axis=1)
+
+    df = meta.join(df,how='right')
+
+    return df
