@@ -33,12 +33,6 @@ def set_jue_plotting_defaults():
     plt.style.use('default')
     plt.style.use('default')
     
-def outside_axes_labels(ax, axs, xlabel, ylabel):
-    if any([ax==axs[i,0] for i in range(axs.shape[0])]):
-        ax.set_ylabel(ylabel);
-    if any([ax==axs[axs.shape[0]-1,i] for i in range(axs.shape[1])]):
-        ax.set_xlabel(xlabel);
-
 def savefig(fig, filename, **kwargs):
     args = {'dpi':150,
             'bbox_inches':'tight'

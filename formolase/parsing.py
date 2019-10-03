@@ -142,3 +142,9 @@ def load_tecan_growth_curves(datafile, metafile):
     df = meta.join(df,how='right')
 
     return df
+
+def reorder_dataframe(df, fieldname, fieldvalues):
+    tmp = pd.DataFrame()
+    for val in fieldvalues:
+        tmp = tmp.append(df[df[fieldname]==val])
+    return tmp
