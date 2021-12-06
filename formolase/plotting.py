@@ -32,6 +32,9 @@ def set_jue_plotting_defaults():
     set_matplotlib_font_sizes()
     plt.style.use('default')
     plt.style.use('default')
+    import matplotlib
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
     
 def savefig(fig, filename, **kwargs):
     args = {'dpi':150,
@@ -51,3 +54,20 @@ def outside_axis_labels(ax, axs, xlabel='', ylabel=''):
         ax.set_xlabel(xlabel)
     if any(ax==axs[:,0]):
         ax.set_ylabel(ylabel)
+
+def square_axes(ax, draw_diagonal=True):
+    xl = ax.get_xlim()
+    yl = ax.get_ylim()
+    lim = [min(xl[0],yl[0]), max(xl[1],yl[1])]
+    ax.set_xlim(lim)
+    ax.set_ylim(lim)
+    if draw_diagonal: ax.plot(lim,lim,'k:')
+
+def reorder_df(df, column, values):
+    df2 = None
+    for v in values:
+        if df2 is None:
+            df2 = df[df[column]==v]
+        else:
+            df2 = df2.append(df[df[column]==v])
+    return df2

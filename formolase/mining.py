@@ -46,7 +46,8 @@ def clustered_link_color_func(linkmat=None, clus=None, default_color='#AAAAAA', 
 def clustergram(mat, linkmat1, clus=None, linkmat2=None, dendro_linewidth = None,
                 cm_heatmap=plt.cm.inferno_r, cm_dendrogram=plt.cm.prism,
                 randomize_dendro_colors = True,
-                figsize=(8,8), heatmap_xlabel='', heatmap_ylabel='', colorbar_label=''):
+                figsize=(8,8), heatmap_xlabel='', heatmap_ylabel='', colorbar_label='',
+                vmin=None, vmax=None):
 
     import numpy as np
     import pandas as pd
@@ -113,8 +114,8 @@ def clustergram(mat, linkmat1, clus=None, linkmat2=None, dendro_linewidth = None
     img = ax_heatmap.imshow(tmp,
                  aspect="auto",origin="lower",
                  cmap=cm_heatmap,
-                 vmin=np.percentile(mat,5),
-                 vmax=np.percentile(mat,95),
+                 vmin=np.percentile(mat,5) if vmin is None else vmin,
+                 vmax=np.percentile(mat,95) if vmax is None else vmax,
                  interpolation="none"
                 )
 
