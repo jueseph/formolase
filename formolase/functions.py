@@ -2,7 +2,8 @@ import os,sys,glob,shutil
 import numpy as np
 import pandas as pd
 
-def split_folder(folder, batch_size, trb_dir=None, start_batch=0):
+
+def split_folder(folder, batch_size, trb_dir=None, start_batch=0, ndigits=None, sort_length=False):
     '''Splits files in a folder into subdirectories with <batch_size> files each.'''
 
     N = batch_size
@@ -11,10 +12,31 @@ def split_folder(folder, batch_size, trb_dir=None, start_batch=0):
     if trb_dir is None:
         trb_dir = folder+'/../'
         
-    for fn in sorted(glob.glob(folder+'*pdb')):
-        subfolder = f'{b:02}/'
+    filenames = sorted(glob.glob(folder+'*pdb'))
+    if sort_length:
+        sys.path.append('/home/jue/git/rfdesign/hallucinate/util/')
+        import parsers
+        lengths = []
+        for fn in filenames:
+            pdb = parsers.parse_pdb(fn)
+            lengths.append((len(pdb['pdb_idx']),fn))
+        lengths = sorted(lengths, key=lambda x: x[0])
+        filenames = [x[1] for x in lengths]
+        
+    if ndigits is None:
+        ndigits = int(np.ceil(np.log10(len(filenames)/N)))
+
+    for fn in filenames:
+        subfolder = f'{b:0{ndigits}}/'
         os.makedirs(folder+'/'+subfolder, exist_ok=True)
         shutil.move(fn, folder+'/'+subfolder+os.path.basename(fn))
+        
+        pre = fn.replace('.pdb','')
+        filenames2 = glob.glob(pre+'.*')
+        for fn2 in filenames2:
+            if os.path.exists(fn2):
+                shutil.move(fn2, folder+'/'+subfolder+os.path.basename(fn2))
+                
         trbfn = os.path.basename(fn).replace('.pdb','.trb')
         if os.path.islink(folder+'/'+trbfn):
             os.symlink(trb_dir+'/'+trbfn, folder+'/'+subfolder+trbfn)
@@ -115,3 +137,11 @@ def filter_on_seq_id(df, thresh = 0.8, verbose=False):
                 j += 1
         i += 1  
     return names
+
+
+def dedup(x):
+    tmp = []
+    for c in x:
+        if c not in tmp:
+            tmp.append(c)
+    return tmp

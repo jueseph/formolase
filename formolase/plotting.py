@@ -71,3 +71,12 @@ def reorder_df(df, column, values):
         else:
             df2 = df2.append(df[df[column]==v])
     return df2
+
+def parity_plot(df,x,y,plot_kwargs={},equal_axes=True):
+    fig,ax = plt.subplots(figsize=(3,3))
+    ax.plot(df[x],df[y],'o',markerfacecolor='none',**plot_kwargs)
+    ax.set_xlabel(x)
+    ax.set_ylabel(y)
+    if equal_axes:
+        square_axes(ax)
+    return fig,ax
